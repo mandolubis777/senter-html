@@ -1,1 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tes Senter Web HTML</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px 20px;
+            background-color: #f4f4f4;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            margin: 10px;
+        }
+        .btn-on { background-color: #4CAF50; color: white; }
+        .btn-off { background-color: #f44336; color: white; }
+        #status { margin-top: 20px; font-weight: bold; color: #333; }
+    </style>
+</head>
+<body>
 
+    <h2>Aplikasi Senter Web Sederhana</h2>
+    <p>Pastikan Anda membuka halaman ini lewat koneksi <strong>HTTPS</strong> dan mengizinkan akses kamera.</p>
+
+    <button class="btn-on" onclick="nyalakanSenter()">Nyalakan Senter</button>
+    <button class="btn-off" onclick="matikanSenter()">Matikan Senter</button>
+
+    <div id="status">Status: Senter Mati</div>
+
+    <script>
+        let track = null;
+
+        async function ambilAksesKamera() {
+            try {
+                // Meminta akses ke kamera belakang
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { exact: "environment" } }
+                });
+                
+                // Mengambil track video dari kamera
+                track = stream.getVideoTracks()[0];
+                return true;
+            } catch (error) {
+                document.getElementById('status').innerText = "Gagal mengakses kamera/senter: " + error.message;
+                return false;
+            }
+        }
+
+        async function nyalakanSenter() {
+            if (!track) {
+                const sukses = await ambilAksesKamera();
+                if (!sukses) return;
+            }
+
+            try {
+                // Mengaktifkan fitur torch (senter)
+                await track.applyConstraints({
+                    advanced: [{ torch: true }]
+                });
+                document.getElementById('status').innerText = "Status: Senter Menyala! 💡";
+            } catch (error) {
+                document.getElementById('status').innerText = "Browser Anda tidak mendukung kontrol senter.";
+            }
+        }
+
+        async function matikanSenter() {
+            if (track) {
+                try {
+                    // Mematikan fitur torch
+                    await track.applyConstraints({
+                        advanced: [{ torch: false }]
+                    });
+                    
+                    // Menghentikan total penggunaan kamera agar baterai hemat
+                    track.stop();
+                    track = null;
+                    document.getElementById('status').innerText = "Status: Senter Mati";
+                } catch (error) {
+                    console.error("Gagal mematikan senter:", error);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
